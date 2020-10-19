@@ -1,3 +1,5 @@
+const RENDER_TO_DOM = Symbol("render to dom");
+
 class ElementWrapper {
     constructor(type) {
         this.root = document.createElement(type);
@@ -6,13 +8,24 @@ class ElementWrapper {
         this.root.setAttribute(name, value);
     }
     appendChild(component) {
-        this.root.appendChild(component.root);
+        let range = document.createRange();
+        range.setStart(this.root, this.root.childNodes.length);
+        range.setEnd(this.root, this.root.childNodes.length);
+        component[RENDER_TO_DOM](range);
+    }
+    [RENDER_TO_DOM](range) {
+        range.deleteContents();
+        range.insertNode(this.root);
     }
 }
 
 class TextWrapper {
     constructor(content) {
         this.root = document.createTextNode(content);
+    }
+    [RENDER_TO_DOM](range) {
+        range.deleteContents();
+        range.insertNode(this.root);
     }
 }
 
@@ -28,12 +41,15 @@ export class Component {
     appendChild(component) {
         this.children.push(component);
     }
-    get root() {
-        if (!this._root) {
-            this._root = this.render().root;
-        }
-        return this._root;
+    [RENDER_TO_DOM](range) {
+        this.render()[RENDER_TO_DOM](range);
     }
+    // get root() {
+    //     if (!this._root) {
+    //         this._root = this.render().root;
+    //     }
+    //     return this._root;
+    // }
 }
 
 export function zion(type, attributes, ...children) {
@@ -65,5 +81,9 @@ export function zion(type, attributes, ...children) {
 }
 
 export function render(component, parentElement) {
-    parentElement.appendChild(component.root);
+    let range = document.createRange();
+    range.setStart(parentElement, 0);
+    range.setEnd(parentElement, parentElement.childNodes.length);
+    range.deleteContents();
+    component[RENDER_TO_DOM](range);
 }
