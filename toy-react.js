@@ -10,7 +10,12 @@ class ElementWrapper {
                 RegExp.$1.replace(/^[\s\S]/, c => c.toLowerCase()), // 确保事件名小写
                 value);
         } else {
-            this.root.setAttribute(name, value);
+            if (name === "className") {
+                this.root.setAttribute("class", value);
+            }
+            else {
+                this.root.setAttribute(name, value);
+            }
         }
     }
     appendChild(component) {
@@ -90,6 +95,9 @@ export function zion(type, attributes, ...children) {
         for (let child of children) {
             if (typeof child === "string") {
                 child = new TextWrapper(child);
+            }
+            if (child === null){
+                continue;
             }
             if (typeof child === "object" && child instanceof Array) {
                 insertChildren(child);
