@@ -58,8 +58,18 @@ export class Component {
         this.render()[RENDER_TO_DOM](range);
     }
     rerender() {
-        this._range.deleteContents();
-        this[RENDER_TO_DOM](this._range);
+        // 原逻辑如注释代码所示，下面的代码为解决 Range bug 插入
+        // this._range.deleteContents();
+        // this[RENDER_TO_DOM](this._range);
+
+        let oldRange = this._range;
+        let range = document.createRange();
+        range.setStart(oldRange.startContainer, oldRange.startOffset);
+        range.setEnd(oldRange.startContainer, oldRange.startOffset);
+        this[RENDER_TO_DOM](range);
+
+        oldRange.setStart(range.endContainer, range.endOffset);
+        oldRange.deleteContents();
     }
     setState(newState) {
         if (this.state === null || typeof this.state !== "object") {
@@ -96,7 +106,7 @@ export function zion(type, attributes, ...children) {
             if (typeof child === "string") {
                 child = new TextWrapper(child);
             }
-            if (child === null){
+            if (child === null) {
                 continue;
             }
             if (typeof child === "object" && child instanceof Array) {
